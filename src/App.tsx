@@ -1,25 +1,27 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ReactFlow,
-  useNodesState,
-  useEdgesState,
   addEdge,
   type Node,
-  type NodeTypes,
   type OnConnect,
   type OnNodesChange,
   type OnEdgesChange,
   applyNodeChanges,
   type Edge,
   applyEdgeChanges,
-  Position,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
 
 import { getActionBlueprint } from "./services/avantos";
+import FormNode from "./components/FormNode";
 
 // GET URL http://localhost:3000/api/v1/1/actions/blueprints/1/graph
+
+const nodeTypes = {
+  formNode: FormNode,
+};
+
 const initialNodes = [
   { id: "1", position: { x: 0, y: 0 }, data: { label: "1" } },
   { id: "2", position: { x: 0, y: 100 }, data: { label: "2" } },
@@ -43,15 +45,16 @@ export default function App() {
       console.log(response);
 
       if (response.nodes !== null && response.edges !== null) {
-        const nodes: Node[] = response.nodes.map((bNode, index) => {
+        const nodes: Node[] = response.nodes.map((bNode) => {
+          console.log("creating node ", bNode.data.name);
           const node: Node = {
             id: bNode.id,
             position: bNode.position,
             data: {
-              label: bNode.type,
+              typeText: bNode.type,
+              formText: bNode.data.name,
             },
-            sourcePosition: Position.Right,
-            targetPosition: Position.Left,
+            type: "formNode",
           };
           return node;
         });
@@ -98,6 +101,7 @@ export default function App() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        nodeTypes={nodeTypes}
       />
     </div>
   );
