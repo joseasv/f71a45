@@ -12,11 +12,11 @@ const FormNode = ({ data }) => {
   console.log("formNode with data ", data);
 
   return (
-    <div style={nodeStyle} onClick={}>
+    <div style={nodeStyle}>
       <Handle type="target" position={Position.Left} />
       <div>
-        <div>{data.typeText}</div>
-        <label>{data.formText}</label>
+        <div>Form</div>
+        <label>{data.name}</label>
       </div>
       <Handle type="source" position={Position.Right} />
     </div>

@@ -1,3 +1,5 @@
+import type { ReducerWithoutAction } from "react";
+
 export interface ActionBlueprintGraphGetParams {
   action_blueprint_id: string;
   blueprint_version_id: string;
@@ -43,12 +45,32 @@ export interface Form {
   custom_javascript: string;
   custom_javascript_triggering_fields: string[] | null;
   description: string;
+  dynamic_field_config: Record<string, DynamicFieldConfig>;
+  field_schema: FieldSchema;
+  id: string;
+  is_reusable: boolean;
+  name: string;
+  ui_schema: UISchema;
+  updated_at: Date;
+  vendor_schema: Record<string, any>;
+}
+
+export interface UISchema {
+  elements: [] | null;
+  type: string;
+}
+
+export interface FieldSchema {
+  properties: Record<string, any>;
+  required?: string[] | null;
+  type: string;
 }
 
 export interface DynamicFieldConfig {
   endpoint_id: string;
   output_key: string;
   payload_fields: Record<string, PayloadField>;
+  selector_field: string;
 }
 
 type CommonFields = {

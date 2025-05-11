@@ -13,9 +13,13 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
+import Graph from "./graphs/graph";
+import type { Form, Node as NodeAvantos, Edge as EdgeAvantos } from "./types";
+
 import { getActionBlueprint } from "./services/avantos";
 import FormNode from "./components/FormNode";
-
+import PrefillUI from "./components/PrefillUI";
+import breadthFirstSearch from "./graphs/graphAlgos";
 // GET URL http://localhost:3000/api/v1/1/actions/blueprints/1/graph
 
 const nodeTypes = {
@@ -31,6 +35,13 @@ const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
 export default function App() {
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  const [allFormsData, setAllFormsData] = useState<Form[]>([]);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [nodeFormData, setNodeFormData] = useState<Form>();
+  const [graph, setGraph] = useState<Graph>();
+  const [nodePath, setNodePath] = useState<Set<NodeAvantos>>(
+    new Set<NodeAvantos>(),
+  );
 
   useEffect(() => {
     console.log("use effect ", nodes);
@@ -44,36 +55,41 @@ export default function App() {
 
       console.log(response);
 
-      if (response.nodes !== null && response.edges !== null) {
-        const nodes: Node[] = response.nodes.map((bNode) => {
+      if (
+        response.nodes !== null &&
+        response.edges !== null &&
+        response.forms !== null
+      ) {
+        const nodes: Node[] = response.nodes.map((bNode: NodeAvantos) => {
           console.log("creating node ", bNode.data.name);
           const node: Node = {
             id: bNode.id,
             position: bNode.position,
-            data: {
-              typeText: bNode.type,
-              formText: bNode.data.name,
-            },
+            data: { ...bNode.data },
             type: "formNode",
           };
           return node;
         });
 
-        const edges: Edge[] = response.edges.map((bEdge, index) => {
-          const edge: Edge = {
-            id: index.toString(),
-            source: bEdge.source,
-            target: bEdge.target,
-          };
+        const edges: Edge[] = response.edges.map(
+          (bEdge: EdgeAvantos, index) => {
+            const edge: Edge = {
+              id: index.toString(),
+              source: bEdge.source,
+              target: bEdge.target,
+            };
 
-          return edge;
-        });
+            return edge;
+          },
+        );
 
         console.log("react flow nodes ", nodes);
         console.log("react flow edges ", edges);
 
         setNodes(nodes);
         setEdges(edges);
+        setAllFormsData(response.forms);
+        setGraph(new Graph(response.nodes, response.edges));
       }
     };
     getBlueprint();
@@ -93,6 +109,24 @@ export default function App() {
     [setEdges],
   );
 
+  const onNodeClick = (event, node: Node) => {
+    if (node !== null) {
+      console.log("clicked node ", node);
+      setModalOpen(true);
+      setNodeFormData(
+        allFormsData.find((elem) => elem.id === node.data.component_id),
+      );
+      const selectedNode: NodeAvantos | undefined = nodes.find(
+        (nodeElem) => nodeElem.id === node.id,
+      );
+      setNodePath(breadthFirstSearch(graph, selectedNode));
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <ReactFlow
@@ -102,6 +136,12 @@ export default function App() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        onNodeClick={onNodeClick}
+      />
+      <PrefillUI
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        nodePath={nodePath}
       />
     </div>
   );
